@@ -15,7 +15,7 @@ import com.nexus.app.data.mapper.TaskMapper
 import com.nexus.app.data.mapper.WeightEntryMapper
 import com.nexus.app.data.repository.DefaultTaskRepository
 import com.nexus.app.data.repository.DefaultWeightRepository
-import com.nexus.app.data.repository.FirebaseAiTaskParserRepository
+import com.nexus.app.data.repository.HybridAiTaskParserRepository
 import com.nexus.app.data.repository.JsonBackupRepository
 import com.nexus.app.domain.repository.AiTaskParserRepository
 import com.nexus.app.domain.repository.BackupRepository
@@ -75,7 +75,7 @@ abstract class AppBindModule {
     abstract fun bindWeightRepository(impl: DefaultWeightRepository): WeightRepository
 
     @Binds
-    abstract fun bindAiTaskParserRepository(impl: com.nexus.app.data.repository.HybridAiTaskParserRepository): AiTaskParserRepository
+    abstract fun bindAiTaskParserRepository(impl: HybridAiTaskParserRepository): AiTaskParserRepository
 
     @Binds
     abstract fun bindCalendarRepository(impl: CalendarContentRepository): CalendarRepository
