@@ -8,15 +8,20 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.Instant
 import javax.inject.Inject
 
+import android.content.ContentUris
+import android.content.ContentValues
+import java.util.TimeZone
+
 class CalendarContentRepository @Inject constructor(
     @ApplicationContext private val context: Context,
 ) : CalendarRepository {
-    override suspend fun readUpcomingEvents(limit: Int): List<CalendarEvent> {
-        val now = Instant.now().toEpochMilli()
+
+    override suspend fun readEvents(startEpochMillis: Long, endEpochMillis: Long): List<CalendarEvent> {
         val uri = CalendarContract.Instances.CONTENT_URI.buildUpon()
-            .appendPath(now.toString())
-            .appendPath((now + 7 * 24 * 60 * 60 * 1000).toString())
+            .appendPath(startEpochMillis.toString())
+            .appendPath(endEpochMillis.toString())
             .build()
+            
         val projection = arrayOf(
             CalendarContract.Instances.EVENT_ID,
             CalendarContract.Instances.TITLE,
@@ -24,6 +29,7 @@ class CalendarContentRepository @Inject constructor(
             CalendarContract.Instances.END,
             CalendarContract.Instances.EVENT_LOCATION,
         )
+        
         return buildList {
             context.contentResolver.query(
                 uri,
@@ -32,7 +38,7 @@ class CalendarContentRepository @Inject constructor(
                 null,
                 "${CalendarContract.Instances.BEGIN} ASC",
             )?.use { cursor ->
-                while (cursor.moveToNext() && size < limit) {
+                while (cursor.moveToNext()) {
                     add(
                         CalendarEvent(
                             id = cursor.getLong(0),
@@ -45,5 +51,66 @@ class CalendarContentRepository @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun getPrimaryCalendarId(): Long? {
+        val projection = arrayOf(CalendarContract.Calendars._ID)
+        val selection = "${CalendarContract.Calendars.VISIBLE} = 1 AND ${CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL} >= ${CalendarContract.Calendars.CAL_ACCESS_CONTRIBUTOR}"
+        context.contentResolver.query(
+            CalendarContract.Calendars.CONTENT_URI,
+            projection,
+            selection,
+            null,
+            null
+        )?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                return cursor.getLong(0)
+            }
+        }
+        return null
+    }
+
+    override suspend fun insertEvent(
+        title: String,
+        startEpochMillis: Long,
+        endEpochMillis: Long,
+        location: String?
+    ): Long {
+        val calId = getPrimaryCalendarId() ?: return -1L
+        
+        val values = ContentValues().apply {
+            put(CalendarContract.Events.DTSTART, startEpochMillis)
+            put(CalendarContract.Events.DTEND, endEpochMillis)
+            put(CalendarContract.Events.TITLE, title)
+            put(CalendarContract.Events.EVENT_LOCATION, location)
+            put(CalendarContract.Events.CALENDAR_ID, calId)
+            put(CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().id)
+        }
+        
+        val uri = context.contentResolver.insert(CalendarContract.Events.CONTENT_URI, values)
+        return uri?.lastPathSegment?.toLongOrNull() ?: -1L
+    }
+
+    override suspend fun updateEvent(
+        id: Long,
+        title: String,
+        startEpochMillis: Long,
+        endEpochMillis: Long,
+        location: String?
+    ) {
+        val values = ContentValues().apply {
+            put(CalendarContract.Events.DTSTART, startEpochMillis)
+            put(CalendarContract.Events.DTEND, endEpochMillis)
+            put(CalendarContract.Events.TITLE, title)
+            put(CalendarContract.Events.EVENT_LOCATION, location)
+            put(CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().id)
+        }
+        val updateUri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, id)
+        context.contentResolver.update(updateUri, values, null, null)
+    }
+
+    override suspend fun deleteEvent(id: Long) {
+        val deleteUri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, id)
+        context.contentResolver.delete(deleteUri, null, null)
     }
 }
