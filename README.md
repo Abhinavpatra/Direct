@@ -1,47 +1,57 @@
-# Nexus
+# Nexus Premium
+**Direct — You direct your life the way you want.**
 
-Local-first Android command center. Kotlin + Jetpack Compose.
+Premium, local-first Android command center. High-definition monochrome aesthetic with Gemini AI intelligence.
 
-## Quick Install
-
-1. **Phone**: Enable **Developer Options** > **USB Debugging**.
-2. **PC**: Connect phone via USB.
-3. **Run**:
+## Build APK
+1. **Clean & Build**:
    ```powershell
-   ./gradlew installDebug
+   ./gradlew.bat assembleDebug
    ```
-
-## ## FOR YOU TO DO (Mandatory Setup)
-The app requires Firebase for AI features. Follow these steps to make it work:
-
-1. **Firebase Project**: Create a project in [Firebase Console](https://console.firebase.google.com/).
-2. **Add Android App**: Use package name `com.nexus.app`.
-3. **Config File**: Download `google-services.json` and place it in the `app/` folder.
-4. **Enable Vertex AI**:
-   - Go to the Firebase Console.
-   - Select **Build > Vertex AI**.
-   - Enable the **Vertex AI for Firebase** (AI Logic) SDK.
-   - Note: This typically requires the **Blaze (Pay as you go) plan**, though it has a generous free tier.
-5. **On-Device AI**: Currently, the app uses a basic pattern-matching fallback when offline. To use **Gemini Nano**, you must use a supported device (e.g., Pixel 8+) and configure the [Google AI Edge SDK](https://ai.google.dev/edge/gemini-nano).
-
-
-
-once done : 
-run 
-./gradlew assembleDebug
-
-## Features
-- AI Natural Language Input (Online + Offline Fallback)
-- Personal Agenda + Calendar Integration
-- Weight & Biometrics Tracking (Canvas Charts)
-- Local JSON Backup/Restore
-- Modern Onboarding Flow
-
-## Project Status
-- [x] **Onboarding Flow**: Completed.
-- [x] **Dark Mode**: Refined contrast and depth.
-- [x] **Offline AI**: Implemented basic functional fallback.
-- [x] **Hybrid AI Repository**: Automatically switches to local when remote fails.
+2. **APK Location**:
+   `app\.build\app\outputs\apk\debug\app-debug.apk`
 
 ---
-*Privacy-first. Local-only storage. Smart assistance.*
+
+## Setup Gemini AI
+Nexus uses the **Google Generative AI SDK** (no Firebase required).
+
+1. **Get API Key**: Go to [Google AI Studio](https://aistudio.google.com/) and create a free Gemini API key.
+2. **Input during Onboarding**: Launch the app and paste the key when prompted.
+3. **Change Key**: You can also update the key anytime in **Settings**.
+
+---
+
+## Features
+- **Deep Monochrome UI**: Custom "Cred/Grok" inspired aesthetic with pure blacks and crisp whites.
+- **Gemini Chat**: Natural language capture for reminders, calls, and meetings.
+- **Premium Onboarding**: 3-step glassmorphic flow with permission handling and haptic feedback.
+- **Advanced Haptics**: Precision-engineered vibration patterns for every interaction.
+- **Local-First**: Your data stays on your device. SQLite (Room) for storage.
+- **Hybrid Parser**: Intelligent fallback to local parsing if Gemini is offline.
+
+---
+
+## Technical Stack
+- **Languages**: Kotlin + Jetpack Compose
+- **AI**: Gemini 2.0 Flash (via Google AI SDK)
+- **Database**: Room (SQLite)
+- **Dependency Injection**: Hilt / Dagger
+- **Persistence**: SharedPreferences + DataStore
+
+---
+
+## Build Prerequisites
+- **JDK**: 17+
+- **Android SDK**: API 36 (target)
+- **Gradle**: 9.3.1 (included)
+
+### Rebuild from Scratch
+If you encounter build issues, delete the temporary files:
+```powershell
+Remove-Item -Path ".build" -Recurse -Force
+./gradlew.bat assembleDebug
+```
+
+---
+*Privacy-first. Premium-designed. Direct control.*
