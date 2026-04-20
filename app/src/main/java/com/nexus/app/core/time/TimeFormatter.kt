@@ -10,7 +10,13 @@ import javax.inject.Singleton
 @Singleton
 class TimeFormatter @Inject constructor() {
     private val dateFormatter = DateTimeFormatter.ofPattern("EEE, MMM d")
+    private val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
     private val dateTimeFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a")
+
+    fun formatTime(epochMillis: Long): String =
+        Instant.ofEpochMilli(epochMillis)
+            .atZone(ZoneId.systemDefault())
+            .format(timeFormatter)
 
     fun formatDate(epochMillis: Long): String =
         Instant.ofEpochMilli(epochMillis)
