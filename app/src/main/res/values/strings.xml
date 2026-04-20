@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Nexus</string>
+    <string name="notification_channel_name">Task reminders</string>
+    <string name="notification_channel_description">Exact reminders for scheduled tasks</string>
+</resources>

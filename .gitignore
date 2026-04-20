@@ -1,0 +1,39 @@
+# Built objects
+bin/
+gen/
+obj/
+
+# Gradle
+.gradle/
+build/
+.build/
+app/build/
+
+# Kotlin
+.kotlin/
+.kotlin-sessions/
+
+# Android Studio
+*.iml
+.idea/
+local.properties
+.DS_Store
+
+# Built artifacts
+*.apk
+*.aar
+*.ap_
+*.dex
+*.class
+*.flat
+*.hprof
+
+# Key files
+*.jks
+*.keystore
+
+# External dependencies
+gradle-9.3.1-bin.zip
+
+# Logs
+*.log
