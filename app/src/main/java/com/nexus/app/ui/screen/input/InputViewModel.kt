@@ -11,14 +11,24 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.nexus.app.domain.repository.TaskRepository
 import javax.inject.Inject
 
 @HiltViewModel
 class InputViewModel @Inject constructor(
     private val createTaskFromInputUseCase: CreateTaskFromInputUseCase,
+    private val taskRepository: TaskRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(InputUiState())
     val uiState: StateFlow<InputUiState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            taskRepository.observeTasks().collect { tasks ->
+                _uiState.update { it.copy(history = tasks) }
+            }
+        }
+    }
 
     fun onInputChange(value: String) {
         _uiState.update { it.copy(input = value) }
@@ -27,7 +37,7 @@ class InputViewModel @Inject constructor(
     fun submit() {
         val currentInput = _uiState.value.input
         if (currentInput.isBlank()) {
-            _uiState.update { it.copy(message = "Describe task, time, and reason") }
+            _uiState.update { it.copy(message = "Try: 'Remind me to [task] at [time] because [reason]'") }
             return
         }
         viewModelScope.launch {
