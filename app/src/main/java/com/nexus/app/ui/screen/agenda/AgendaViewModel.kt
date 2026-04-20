@@ -14,13 +14,29 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import java.time.LocalDate
+
 @HiltViewModel
 class AgendaViewModel @Inject constructor(
     observeAgendaUseCase: ObserveAgendaUseCase,
     private val updateTaskStatusUseCase: UpdateTaskStatusUseCase,
+    private val manageCalendarEventUseCase: ManageCalendarEventUseCase,
 ) : ViewModel() {
-    val uiState: StateFlow<AgendaUiState> = observeAgendaUseCase()
-        .map { AgendaUiState(days = it, isLoading = false) }
+    private val _refreshTrigger = MutableStateFlow(Unit)
+    private val _dateRange = MutableStateFlow(
+        Pair(
+            LocalDate.now().minusMonths(1),
+            LocalDate.now().plusMonths(3)
+        )
+    )
+
+    val uiState: StateFlow<AgendaUiState> = observeAgendaUseCase(
+        _dateRange.asStateFlow(),
+        _refreshTrigger.asStateFlow()
+    ).map { AgendaUiState(days = it, isLoading = false) }
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5_000),
@@ -31,5 +47,13 @@ class AgendaViewModel @Inject constructor(
         viewModelScope.launch {
             updateTaskStatusUseCase(taskId, TaskStatus.DONE)
         }
+    }
+
+    fun loadMoreDates(startDate: LocalDate, endDate: LocalDate) {
+        _dateRange.value = Pair(startDate, endDate)
+    }
+
+    fun refreshCalendar() {
+        _refreshTrigger.value = Unit
     }
 }
