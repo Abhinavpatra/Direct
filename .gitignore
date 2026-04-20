@@ -8,7 +8,6 @@ obj/
 build/
 .build/
 app/build/
-
 # Kotlin
 .kotlin/
 .kotlin-sessions/
@@ -37,3 +36,7 @@ gradle-9.3.1-bin.zip
 
 # Logs
 *.log
+
+google-services.json
+build.gradle.kts
+app/build.gradle.kts

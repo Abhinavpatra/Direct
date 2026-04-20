@@ -10,12 +10,21 @@ import javax.inject.Inject
 
 @HiltViewModel
 class NexusViewModel @Inject constructor(
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
 ) : ViewModel() {
+    private val _showSplash = MutableStateFlow(true)
+    val showSplash: StateFlow<Boolean> = _showSplash.asStateFlow()
+
     private val _showOnboarding = MutableStateFlow(!userPreferencesRepository.isOnboardingCompleted())
     val showOnboarding: StateFlow<Boolean> = _showOnboarding.asStateFlow()
 
-    fun completeOnboarding() {
+    fun splashFinished() {
+        _showSplash.value = false
+    }
+
+    fun completeOnboarding(apiKey: String, userName: String) {
+        userPreferencesRepository.setGeminiApiKey(apiKey)
+        userPreferencesRepository.setUserName(userName)
         userPreferencesRepository.setOnboardingCompleted(true)
         _showOnboarding.value = false
     }

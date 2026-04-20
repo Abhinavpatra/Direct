@@ -148,25 +148,41 @@ private fun WeightChart(
     val maxWeight = entries.maxOf { it.weightKg }.let { if (it == minWeight) it + 1f else it }
     val pointColor = MaterialTheme.colorScheme.tertiary
     val lineColor = MaterialTheme.colorScheme.primary
-    Canvas(modifier = modifier) {
+
+    Canvas(modifier = modifier.padding(16.dp)) {
         val path = Path()
+        val points = mutableListOf<Offset>()
         entries.forEachIndexed { index, entry ->
             val x = size.width * (index.toFloat() / (entries.lastIndex.coerceAtLeast(1)))
             val yRatio = (entry.weightKg - minWeight) / (maxWeight - minWeight)
             val y = size.height - (yRatio * size.height)
-            val point = Offset(x, y)
-            if (index == 0) path.moveTo(point.x, point.y) else path.lineTo(point.x, point.y)
+            points.add(Offset(x, y))
+        }
+
+        if (points.isNotEmpty()) {
+            path.moveTo(points.first().x, points.first().y)
+            for (i in 0 until points.size - 1) {
+                val p0 = points[i]
+                val p1 = points[i + 1]
+                val cp1 = Offset((p0.x + p1.x) / 2f, p0.y)
+                val cp2 = Offset((p0.x + p1.x) / 2f, p1.y)
+                path.cubicTo(cp1.x, cp1.y, cp2.x, cp2.y, p1.x, p1.y)
+            }
+        }
+
+        drawPath(
+            path = path,
+            color = lineColor,
+            style = Stroke(width = 6f, cap = StrokeCap.Round),
+        )
+
+        points.forEach { point ->
             drawCircle(
                 color = pointColor,
                 radius = 7f,
                 center = point,
             )
         }
-        drawPath(
-            path = path,
-            color = lineColor,
-            style = Stroke(width = 6f, cap = StrokeCap.Round),
-        )
     }
 }
 

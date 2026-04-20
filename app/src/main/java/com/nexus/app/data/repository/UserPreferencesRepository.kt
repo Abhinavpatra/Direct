@@ -16,4 +16,16 @@ class UserPreferencesRepository @Inject constructor(
     fun setOnboardingCompleted(completed: Boolean) {
         prefs.edit().putBoolean("onboarding_completed", completed).apply()
     }
+
+    fun getGeminiApiKey(): String? = prefs.getString("gemini_api_key", null)
+
+    fun setGeminiApiKey(key: String) {
+        prefs.edit().putString("gemini_api_key", key).apply()
+    }
+
+    fun getUserName(): String? = prefs.getString("user_name", null)
+
+    fun setUserName(name: String) {
+        prefs.edit().putString("user_name", name).apply()
+    }
 }
