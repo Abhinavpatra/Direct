@@ -8,19 +8,19 @@ import javax.inject.Singleton
 
 @Singleton
 class HybridAiTaskParserRepository @Inject constructor(
-    private val remoteParser: FirebaseAiTaskParserRepository,
-    private val localParser: LocalAiTaskParserRepository
+    private val remoteParser: GeminiAiTaskParserRepository,
+    private val localParser: LocalAiTaskParserRepository,
 ) : AiTaskParserRepository {
-    override suspend fun parse(text: String): AppResult<ParsedTaskPayload> {
-        val remoteResult = remoteParser.parse(text)
-        
+    override suspend fun parse(text: String, currentTime: String?): AppResult<ParsedTaskPayload> {
+        val remoteResult = remoteParser.parse(text, currentTime)
+
         return if (remoteResult is AppResult.Error) {
             // If remote fails (e.g. offline), try local
-            val localResult = localParser.parse(text)
+            val localResult = localParser.parse(text, currentTime)
             if (localResult is AppResult.Success) {
                 localResult
             } else {
-                // Return original remote error if local also fails or isn't ready
+                // Return original remote error if local also fails
                 remoteResult
             }
         } else {
