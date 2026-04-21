@@ -103,10 +103,10 @@ fun OnboardingScreen(
     }
 
     val calendarPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        calendarGranted = granted
-        if (granted) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        calendarGranted = permissions[Manifest.permission.READ_CALENDAR] == true
+        if (calendarGranted) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
     }
 
     Surface(

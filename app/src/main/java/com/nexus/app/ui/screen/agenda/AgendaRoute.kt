@@ -41,6 +41,16 @@ import androidx.compose.ui.graphics.Color
 import com.nexus.app.domain.model.AgendaDay
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.ZoneId
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import com.nexus.app.domain.model.CalendarEvent
 
 @Composable
 fun AgendaRoute(
@@ -54,6 +64,8 @@ fun AgendaRoute(
     ) == PackageManager.PERMISSION_GRANTED
     
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
+    var eventToEdit by remember { mutableStateOf<CalendarEvent?>(null) }
+    var showEventDialog by remember { mutableStateOf(false) }
     
     LaunchedEffect(uiState.days) {
         if (selectedDate == null && uiState.days.isNotEmpty()) {
@@ -61,7 +73,23 @@ fun AgendaRoute(
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Scaffold(
+        floatingActionButton = {
+            if (hasCalendarPermission) {
+                FloatingActionButton(
+                    onClick = {
+                        eventToEdit = null
+                        showEventDialog = true
+                    },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Event")
+                }
+            }
+        }
+    ) { paddingValues ->
+        Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
         Text(
             text = "Agenda",
             style = MaterialTheme.typography.headlineLarge,
@@ -127,7 +155,11 @@ fun AgendaRoute(
                         subtitle = event.location ?: "No location",
                         timeLabel = "Calendar",
                         isDone = true,
-                        onMarkDone = {}
+                        onMarkDone = {},
+                        onClick = {
+                            eventToEdit = event
+                            showEventDialog = true
+                        }
                     )
                 }
                 
@@ -138,6 +170,32 @@ fun AgendaRoute(
                 Text(if (uiState.isLoading) "Loading..." else "Select a day or sync tasks.")
             }
         }
+    }
+    }
+
+    if (showEventDialog) {
+        EventDialog(
+            event = eventToEdit,
+            selectedDate = selectedDate ?: LocalDate.now(),
+            onDismiss = {
+                showEventDialog = false
+                eventToEdit = null
+            },
+            onSave = { title, startEpochMillis, endEpochMillis, location ->
+                if (eventToEdit == null) {
+                    viewModel.createCalendarEvent(title, startEpochMillis, endEpochMillis, location)
+                } else {
+                    viewModel.updateCalendarEvent(eventToEdit!!.id, title, startEpochMillis, endEpochMillis, location)
+                }
+                showEventDialog = false
+                eventToEdit = null
+            },
+            onDelete = { id ->
+                viewModel.deleteCalendarEvent(id)
+                showEventDialog = false
+                eventToEdit = null
+            }
+        )
     }
 }
 
@@ -169,9 +227,13 @@ private fun TimelineCard(
     timeLabel: String,
     isDone: Boolean,
     onMarkDone: () -> Unit,
+    onClick: (() -> Unit)? = null,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = onClick != null, onClick = onClick ?: {})
+            .padding(vertical = 4.dp)
     ) {
         Column(
             modifier = Modifier.width(60.dp),
@@ -202,4 +264,60 @@ private fun TimelineCard(
             }
         }
     }
+}
+
+
+
+@Composable
+private fun EventDialog(
+    event: CalendarEvent?,
+    selectedDate: LocalDate,
+    onDismiss: () -> Unit,
+    onSave: (String, Long, Long, String?) -> Unit,
+    onDelete: (Long) -> Unit
+) {
+    var title by remember { mutableStateOf(event?.title ?: "") }
+    var location by remember { mutableStateOf(event?.location ?: "") }
+    
+    // Default to 9 AM of selected date
+    val startInstant = event?.startEpochMillis ?: selectedDate.atTime(9, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    val endInstant = event?.endEpochMillis ?: selectedDate.atTime(10, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (event == null) "New Event" else "Edit Event") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Title") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = location,
+                    onValueChange = { location = it },
+                    label = { Text("Location") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (title.isNotBlank()) onSave(title, startInstant, endInstant, location.takeIf { it.isNotBlank() })
+                }
+            ) { Text("Save") }
+        },
+        dismissButton = {
+            Row {
+                if (event != null) {
+                    TextButton(onClick = { onDelete(event.id) }) { Text("Delete", color = MaterialTheme.colorScheme.error) }
+                }
+                TextButton(onClick = onDismiss) { Text("Cancel") }
+            }
+        }
+    )
 }

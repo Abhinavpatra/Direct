@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import com.nexus.app.domain.usecase.ManageCalendarEventUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -46,6 +47,27 @@ class AgendaViewModel @Inject constructor(
     fun markDone(taskId: Long) {
         viewModelScope.launch {
             updateTaskStatusUseCase(taskId, TaskStatus.DONE)
+        }
+    }
+
+    fun createCalendarEvent(title: String, startEpochMillis: Long, endEpochMillis: Long, location: String?) {
+        viewModelScope.launch {
+            manageCalendarEventUseCase.create(title, startEpochMillis, endEpochMillis, location)
+            _refreshTrigger.value = Unit
+        }
+    }
+
+    fun updateCalendarEvent(id: Long, title: String, startEpochMillis: Long, endEpochMillis: Long, location: String?) {
+        viewModelScope.launch {
+            manageCalendarEventUseCase.update(id, title, startEpochMillis, endEpochMillis, location)
+            _refreshTrigger.value = Unit
+        }
+    }
+
+    fun deleteCalendarEvent(id: Long) {
+        viewModelScope.launch {
+            manageCalendarEventUseCase.delete(id)
+            _refreshTrigger.value = Unit
         }
     }
 
